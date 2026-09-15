@@ -33,7 +33,7 @@ test("Search entries by translation", async ({ page }) => {
     await expect(page.getByRole("row", { name: "pineapple Pineapple Ananas" })).toHaveCount(0);
 });
 
-test("Clear search", async ({ page }) => {
+test("Show all entries again when submitting an empty search", async ({ page }) => {
     await page.goto("/tools/translation/dictionaries/message-entries.html/content/dictionaries/fruit/i18n?q=berry");
     await expect(page.getByRole("row", { name: "apple Apple Appel" })).toHaveCount(0);
 
@@ -41,5 +41,36 @@ test("Clear search", async ({ page }) => {
     await page.getByPlaceholder(SEARCH_FIELD).press("Enter");
     await page.waitForURL((url) => url.search === "");
 
+    await expect(page.getByRole("row", { name: "apple Apple Appel" })).toBeVisible();
+});
+
+test("Search automatically after typing at least 3 characters", async ({ page }) => {
+    await page.getByPlaceholder(SEARCH_FIELD).fill("ber");
+    await page.waitForURL(/\?q=ber$/);
+
+    await expect(page.getByPlaceholder(SEARCH_FIELD)).toBeFocused();
+    await expect(page.getByPlaceholder(SEARCH_FIELD)).toHaveValue("ber");
+    await expect(page.getByRole("row", { name: "strawberry Strawberry Aardbei" })).toBeVisible();
+    await expect(page.getByRole("row", { name: "apple Apple Appel" })).toHaveCount(0);
+});
+
+test("Do not search automatically with less than 3 characters", async ({ page }) => {
+    await page.getByPlaceholder(SEARCH_FIELD).fill("be");
+    // longer than the auto search delay
+    await page.waitForTimeout(1000);
+
+    expect(new URL(page.url()).search).toBe("");
+    await expect(page.getByRole("row", { name: "apple Apple Appel" })).toBeVisible();
+});
+
+test("Clear button resets the search", async ({ page }) => {
+    await expect(page.getByRole("button", { name: "Clear", exact: true })).toBeDisabled();
+
+    await page.goto("/tools/translation/dictionaries/message-entries.html/content/dictionaries/fruit/i18n?q=berry");
+    await page.getByRole("button", { name: "Clear", exact: true }).click();
+    await page.waitForURL((url) => url.search === "");
+
+    await expect(page.getByPlaceholder(SEARCH_FIELD)).toHaveValue("");
+    await expect(page.getByRole("button", { name: "Clear", exact: true })).toBeDisabled();
     await expect(page.getByRole("row", { name: "apple Apple Appel" })).toBeVisible();
 });

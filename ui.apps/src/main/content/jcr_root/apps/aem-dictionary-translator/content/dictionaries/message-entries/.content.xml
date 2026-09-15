@@ -46,6 +46,14 @@
                         sling:resourceType="granite/ui/components/coral/foundation/form/textfield"
                         granite:class="dictionary-translator-key-search"
                         emptyText="Search keys and translations"/>
+                <clear
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="granite/ui/components/coral/foundation/button"
+                        granite:class="dictionary-translator-key-search-clear"
+                        disabled="{Boolean}true"
+                        icon="close"
+                        variant="quiet"
+                        text="Clear"/>
             </secondary>
             <selection jcr:primaryType="nt:unstructured">
                 <edit
