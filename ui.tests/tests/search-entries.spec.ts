@@ -44,14 +44,18 @@ test("Show all entries again when submitting an empty search", async ({ page }) 
     await expect(page.getByRole("row", { name: "apple Apple Appel" })).toBeVisible();
 });
 
-test("Search automatically after typing at least 3 characters", async ({ page }) => {
+test("Search automatically after typing at least 3 characters without reloading the page", async ({ page }) => {
+    // lost if the page is reloaded
+    await page.evaluate(() => { document.body.dataset.searchTest = "no-reload"; });
+
     await page.getByPlaceholder(SEARCH_FIELD).fill("ber");
     await page.waitForURL(/\?q=ber$/);
 
-    await expect(page.getByPlaceholder(SEARCH_FIELD)).toBeFocused();
-    await expect(page.getByPlaceholder(SEARCH_FIELD)).toHaveValue("ber");
     await expect(page.getByRole("row", { name: "strawberry Strawberry Aardbei" })).toBeVisible();
     await expect(page.getByRole("row", { name: "apple Apple Appel" })).toHaveCount(0);
+    await expect(page.getByPlaceholder(SEARCH_FIELD)).toBeFocused();
+    await expect(page.getByPlaceholder(SEARCH_FIELD)).toHaveValue("ber");
+    expect(await page.evaluate(() => document.body.dataset.searchTest)).toBe("no-reload");
 });
 
 test("Do not search automatically with less than 3 characters", async ({ page }) => {
@@ -71,6 +75,7 @@ test("Clear button resets the search", async ({ page }) => {
     await page.waitForURL((url) => url.search === "");
 
     await expect(page.getByPlaceholder(SEARCH_FIELD)).toHaveValue("");
+    await expect(page.getByPlaceholder(SEARCH_FIELD)).toBeFocused();
     await expect(page.getByRole("button", { name: "Clear", exact: true })).toBeDisabled();
     await expect(page.getByRole("row", { name: "apple Apple Appel" })).toBeVisible();
 });
